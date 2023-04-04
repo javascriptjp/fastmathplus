@@ -1,0 +1,15 @@
+{
+    "required": true,
+    "compatibilityLevel": "JAVA_8",
+    "package": "lol.erobuki.fastmathplus.mixin.mixins",
+    "refmap": "mixins.fastmathplus.refmap.json",
+    "client": [
+        "MixinBlock",
+        "MixinBlockRendererDispatcher",
+        "MixinMathHelper",
+        "MixinRenderChunk",
+        "MixinRenderGlobal",
+        "MixinVec3d"
+    ],
+    "server": []
+}
