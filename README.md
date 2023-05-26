@@ -7,7 +7,7 @@
 - Download at [Here](https://github.com/javascriptjp/fastmathplus/releases/download/v1/fastmathplus-1.0-beta.jar)
 
 ## Auther
-Soso#2822 [javascriptjp](https://github.com/javascriptjp/)
+[javascriptjp](https://github.com/javascriptjp/)
 
 ## Licensing
 This project is licensed under the [MIT License](https://mit-license.org/)
