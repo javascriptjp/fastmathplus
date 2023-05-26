@@ -1,111 +1,101 @@
 buildscript {
     repositories {
-        mavenCentral()
         maven { url = 'https://files.minecraftforge.net/maven' }
-        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
-        maven { url 'https://m2.dv8tion.net/releases' }
+        maven { url = 'https://repo.spongepowered.org/maven' }
+        mavenCentral()
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:4.+'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
-apply plugin: 'idea'
+
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'org.spongepowered.mixin'
-version project.modVersion
-group project.modGroup
+apply plugin: 'idea'
 
-compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
-    options.encoding = 'UTF-8'
-}
+version = mod_version
+group = mod_group
+archivesBaseName = mod_id
 
-repositories {
-    mavenCentral()
-    maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
-    maven { url = 'https://impactdevelopment.github.io/maven/' }
-    maven { url = 'http://maven-eclipse.github.io/maven' }
-    maven { url = 'https://jitpack.io' }
-    maven { url 'https://m2.dv8tion.net/releases' }
-}
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
 minecraft {
-    mappings channel: 'stable', version: '39-1.12'
-    accessTransformer = file('src/main/resources/fastmathplus_at.cfg')
+    mappings channel: mappings_channel, version: mappings_version
+    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+
     runs {
         client {
             workingDirectory project.file('run')
-            property 'fml.coreMods.load', 'lol.erobuki.fastmathplus.mixin.MixinLoader'
-            property 'mixin.env.disableRefMap', 'true'
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
+            arg '-torg.spongepowered.asm.launch.MixinTweaker'
+        }
+
+        server {
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            arg '-torg.spongepowered.asm.launch.MixinTweaker'
         }
     }
 }
 
+repositories {
+    maven { url = 'https://repo.spongepowered.org/maven' }
+}
+
 configurations {
-    addLib
+    embed
+    compile.extendsFrom(embed)
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
-    addLib("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
-        exclude module: 'launchwrapper'
-        exclude module: 'log4j-core'
-        exclude module: 'guava'
-        exclude module: 'gson'
-        exclude module: 'commons-io'
-    }
-    addLib 'org.apache.commons:commons-math3:3.6.1'
-    annotationProcessor('org.spongepowered:mixin:0.8.2:processor') {
-        exclude module: 'gson'
-    }
-    compileOnly('org.jetbrains:annotations:24.0.1')
-    implementation configurations.addLib
-}
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-mixin {
-    defaultObfuscationEnv 'searge'
-    add sourceSets.main, 'mixins.fastmathplus.refmap.json'
+    embed('org.spongepowered:mixin:0.8.3-SNAPSHOT') {
+        exclude module: 'guava'
+        exclude module: 'commons-io'
+        exclude module: 'gson'
+    }
+
+    embed('org.apache.commons:commons-math3:3.6.1')
 }
 
 processResources {
-    inputs.property 'version', project.version
-    inputs.property 'mcversion', project.mcVersion
-
-    exclude '**/rawimagefiles'
+    inputs.property "version", project.version
+    inputs.property "mcversion", minecraft_version
 
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-        expand 'version': project.version,
-                'mcversion': project.mcVersion,
-                'modVersion': project.modVersion
+
+        expand 'mod_id': mod_id, 'mod_name': mod_name, 'version': project.version,
+                'mcversion': minecraft_version, 'mod_description': mod_description,
+                'mod_author': mod_author
     }
 
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }
+}
 
-    rename '(.+_at.cfg)', 'META-INF/$1'
+mixin {
+    add sourceSets.main, mod_mixin_refmap.replace('${mod_id}', mod_id)
+    config mod_mixin_configs.replace('${mod_id}', mod_id)
 }
 
 jar {
-    manifest {
-        attributes(
-                'Manifest-Version': 1.0,
-                'MixinConfigs': 'mixin.fastmathplus.json',
-                'tweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
-                'TweakOrder': 0,
-                'FMLCorePluginContainsFMLMod': 'true',
-                'FMLCorePlugin': 'lol.erobuki.fastmathplus.mixin.MixinLoader',
-                'ForceLoadAsMod': 'true'
-        )
+    from {
+        configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude "LICENSE.txt", "META-INF/MANIFSET.MF", "META-INF/maven/**", "META-INF/*.RSA", "META-INF/*.SF"
     }
 
-    from {
-        configurations.addLib.collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
+    manifest {
+        attributes "ForceLoadAsMod": "true"
+        attributes "TweakClass": "org.spongepowered.asm.launch.MixinTweaker"
+        attributes "TweakOrder": "0"
     }
 }
+
+jar.finalizedBy('reobfJar')

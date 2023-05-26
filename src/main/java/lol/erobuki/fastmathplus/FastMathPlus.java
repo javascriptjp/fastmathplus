@@ -3,7 +3,6 @@ package lol.erobuki.fastmathplus;
 
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -30,11 +29,6 @@ public class FastMathPlus {
     public void preInit(FMLPreInitializationEvent event) {
         LOGGER.info("Loading " + MODID);
         MinecraftForge.EVENT_BUS.register(this);
-    }
-
-    @SubscribeEvent
-    public void onTextureStitch(TextureStitchEvent.Pre event) {
-
     }
 
     @SubscribeEvent
